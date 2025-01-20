@@ -1,3 +1,7 @@
+# It's a fork, not original package
+
+I forked https://github.com/zelenin/go-tdlib to make it more user-friendly
+
 # go-tdlib
 
 Go wrapper for [TDLib (Telegram Database Library)](https://github.com/tdlib/td) with full support of the TDLib.

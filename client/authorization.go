@@ -53,7 +53,7 @@ func Authorize(client *Client, authorizationStateHandler AuthorizationStateHandl
 	}
 }
 
-type clientAuthorizer struct {
+type ClientAuthorizer struct {
 	TdlibParameters *SetTdlibParametersRequest
 	PhoneNumber     chan string
 	Code            chan string
@@ -61,8 +61,8 @@ type clientAuthorizer struct {
 	Password        chan string
 }
 
-func ClientAuthorizer(tdlibParameters *SetTdlibParametersRequest) *clientAuthorizer {
-	return &clientAuthorizer{
+func NewClientAuthorizer(tdlibParameters *SetTdlibParametersRequest) *ClientAuthorizer {
+	return &ClientAuthorizer{
 		TdlibParameters: tdlibParameters,
 		PhoneNumber:     make(chan string, 1),
 		Code:            make(chan string, 1),
@@ -71,7 +71,7 @@ func ClientAuthorizer(tdlibParameters *SetTdlibParametersRequest) *clientAuthori
 	}
 }
 
-func (stateHandler *clientAuthorizer) Handle(client *Client, state AuthorizationState) error {
+func (stateHandler *ClientAuthorizer) Handle(client *Client, state AuthorizationState) error {
 	stateHandler.State <- state
 
 	switch state.AuthorizationStateType() {
@@ -130,17 +130,17 @@ func (stateHandler *clientAuthorizer) Handle(client *Client, state Authorization
 	return NotSupportedAuthorizationState(state)
 }
 
-func (stateHandler *clientAuthorizer) Close() {
+func (stateHandler *ClientAuthorizer) Close() {
 	close(stateHandler.PhoneNumber)
 	close(stateHandler.Code)
 	close(stateHandler.State)
 	close(stateHandler.Password)
 }
 
-func CliInteractor(clientAuthorizer *clientAuthorizer) {
+func CliInteractor(ClientAuthorizer *ClientAuthorizer) {
 	for {
 		select {
-		case state, ok := <-clientAuthorizer.State:
+		case state, ok := <-ClientAuthorizer.State:
 			if !ok {
 				return
 			}
@@ -151,7 +151,7 @@ func CliInteractor(clientAuthorizer *clientAuthorizer) {
 				var phoneNumber string
 				fmt.Scanln(&phoneNumber)
 
-				clientAuthorizer.PhoneNumber <- phoneNumber
+				ClientAuthorizer.PhoneNumber <- phoneNumber
 
 			case TypeAuthorizationStateWaitCode:
 				var code string
@@ -159,14 +159,14 @@ func CliInteractor(clientAuthorizer *clientAuthorizer) {
 				fmt.Println("Enter code: ")
 				fmt.Scanln(&code)
 
-				clientAuthorizer.Code <- code
+				ClientAuthorizer.Code <- code
 
 			case TypeAuthorizationStateWaitPassword:
 				fmt.Println("Enter password: ")
 				var password string
 				fmt.Scanln(&password)
 
-				clientAuthorizer.Password <- password
+				ClientAuthorizer.Password <- password
 
 			case TypeAuthorizationStateReady:
 				return
